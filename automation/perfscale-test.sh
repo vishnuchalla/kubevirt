@@ -77,8 +77,6 @@ for i in ${namespaces[@]}; do
   kubectl get pods -n $i
 done
 
-# build perfscale tools
-make bazel-build
 
 export DOCKER_PREFIX="${DOCKER_PREFIX:-registry:5000/kubevirt}"
 export DOCKER_TAG="${DOCKER_TAG:-devel}"
@@ -91,4 +89,12 @@ if [[ (${PERFAUDIT} == "true" || ${PERFAUDIT} == "True") && ${KUBEVIRT_PROVIDER}
   _prometheus_port_forward_pid=$1
 fi
 
-./hack/perfscale-tests.sh
+# build perfscale tools
+if [[ "${PERFSCALE_KUBE_BURNER}" == "true" ]]; then
+  echo "running kube-burner perfscale tests"
+  ./hack/perfscale-kube-burner-test.sh
+else
+  echo "building and running in house perfscale tests"
+  make bazel-build
+  ./hack/perfscale-tests.sh
+fi
